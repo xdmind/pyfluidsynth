@@ -130,6 +130,11 @@ def cfunc(name, restype, *argtypes):
 
 # Function prototypes for C versions of functions
 
+# General
+cfunc('fluid_free',
+      None,
+      ('ptr', c_void_p))
+
 # Fluid settings
 cfunc('new_fluid_settings',
       c_void_p)
@@ -289,6 +294,7 @@ cfunc('fluid_synth_write_s16',
       ('rbuf', c_void_p),
       ('roff', c_int),
       ('rincr', c_int))
+# Misc
 cfunc('fluid_synth_handle_midi_event',
       c_int,
       ('data', c_void_p),
