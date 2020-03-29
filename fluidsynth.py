@@ -31,6 +31,12 @@ from ctypes.util import find_library
 # Third-party modules
 from six import binary_type, iteritems, text_type
 
+try:
+    import numpy
+except ImportError:
+    numpy = None
+
+
 # Constants
 
 # Bump this up when changing the interface for users
@@ -255,9 +261,19 @@ cfunc('fluid_synth_program_reset',
 cfunc('fluid_synth_system_reset',
       c_int,
       ('synth', c_void_p))
-# Misc
+# Sample generation
+cfunc('fluid_synth_write_float',
+      c_int,
+      ('synth', c_void_p),
+      ('len', c_int),
+      ('lbuf', c_void_p),
+      ('loff', c_int),
+      ('lincr', c_int),
+      ('rbuf', c_void_p),
+      ('roff', c_int),
+      ('rincr', c_int))
 cfunc('fluid_synth_write_s16',
-      c_void_p,
+      c_int,
       ('synth', c_void_p),
       ('len', c_int),
       ('lbuf', c_void_p),
@@ -800,20 +816,32 @@ def _e(s, encoding=DEFAULT_ENCODING):
 
 # Convenience functions
 
-def fluid_synth_write_s16_stereo(synth, nframes):
+def fluid_synth_write_stereo(synth, nframes, dtype='int16'):
     """Return generated samples in stereo 16-bit format.
 
     :param synth: an instance of class Synth
     :param nframes: number of sample frames to generate
     :type nframes: ``int``
+    :param dtype: data type of each sample frame
+    :type dtype: ``numpy.dtype`` instance or ``str``
     :return: one-dimenional NumPy array of interleaved samples
     :rtype: ``np.array(..., dtype=numpy.int16)``
 
     """
-    import numpy
-    buf = create_string_buffer(nframes * 4)
-    _fl.fluid_synth_write_s16(synth, nframes, buf, 0, 2, buf, 1, 2)
-    return numpy.frombuffer(buf[:], dtype=numpy.int16)
+    if dtype == 'int16' or (numpy and dtype == numpy.int16):
+        buf = create_string_buffer(nframes * 4)
+        _fl.fluid_synth_write_s16(synth, nframes, buf, 0, 2, buf, 1, 2)
+    elif dtype == 'float' or (numpy and dtype == numpy.float):
+        buf = c_float * (nframes * 2)
+        _fl.fluid_synth_write_float(synth, nframes, buf, 0, 2, buf, 1, 2)
+    else:
+        raise ValueError("Data type '%s' not supported. Is NumPy installed?" % dtype)
+
+    if dtype and numpy:
+        return numpy.frombuffer(buf[:], dtype=dtype)
+    else:
+        return buf
+
 
 
 def raw_audio_string(data):
@@ -1543,7 +1571,7 @@ class Synth:
         """Turn off all notes on a MIDI channel (put them into release phase)."""
         return _fl.fluid_synth_all_notes_off(self.synth, chan)
 
-    def get_samples(self, len=1024):
+    def get_samples(self, len=1024, dtype='float'):
         """Generate audio samples.
 
         The return value will be a NumPy array containing the given length of
@@ -1551,7 +1579,7 @@ class Synth:
         array will be size 2 * len.
 
         """
-        return _fl.fluid_synth_write_s16_stereo(self.synth, len)
+        return fluid_synth_write_stereo(self.synth, len, dtype)
 
 
 class Sequencer:
