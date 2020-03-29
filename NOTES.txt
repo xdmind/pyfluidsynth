@@ -1,0 +1,4 @@
+Windows binaries
+----------------
+
+https://github.com/JoshuaPrzyborowski/FluidSynth-Windows-Builds
