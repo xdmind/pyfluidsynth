@@ -97,8 +97,15 @@ AUDIO_FILE_TYPES = ("aiff, au, auto, avr, caf, flac, htk, iff, mat, oga, paf, pv
 # A short circuited or expression to find the FluidSynth library
 # (mostly needed for Windows distributions of libfluidsynth supplied with QSynth)
 lib = (find_library('fluidsynth') or
+       find_library('libfluidsynth') or
        find_library('fluidsynth-2') or
-       find_library('fluidsynth-1'))
+       find_library('libfluidsynth-2') or
+       find_library('fluidsynth-1') or
+       find_library('libfluidsynth-1') or
+       # The basename of the DLL of certain fluidsynth 1.1.x
+       # Windows builds has a '-7' suffix
+       find_library('fluidsynth-7') or
+       find_library('libfluidsynth-7'))
 
 if lib is None:
     raise ImportError("Couldn't find the FluidSynth library.")
