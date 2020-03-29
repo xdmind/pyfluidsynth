@@ -991,7 +991,13 @@ class BasePlayer(object):
         :param ticks: position in MIDI ticks
         :type ticks: ``int``
 
+        .. note: not supported in FluidSynth 1.x
+
         """
+        if _fl.fluid_player_seek is None:
+            raise NotImplementedError(
+                "Seeking is not supported by the MIDI player in FluidSynth 1.x")
+
         return _fl.fluid_player_seek(self.player, ticks)
 
     @property
