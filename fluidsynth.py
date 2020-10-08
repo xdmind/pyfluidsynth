@@ -662,11 +662,16 @@ fluid_player_play = cfunc(
     'fluid_player_play',
     c_int,
     ('player', c_void_p, 1))
+
+"""
 fluid_player_seek = cfunc(
     'fluid_player_seek',
     c_int,
     ('player', c_void_p, 1),
     ('ticks', c_int, 1))
+"""
+
+
 fluid_player_set_loop = cfunc(
     'fluid_player_set_loop',
     c_int,
